@@ -14,6 +14,7 @@ function init() {
     if(isLoggedIn()) renderMainApp();
     else renderAuth();
     bindGlobalEvents();
+    initSPARouting();
   });
 }
 
@@ -335,12 +336,16 @@ function setupSidebarEvents() {
   // Tabs
   $$('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
+      const tabName = tab.dataset.tab;
       $$('.tab').forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
       $$('.tab-content').forEach(tc => tc.classList.remove('active'));
-      const target = document.getElementById('tab' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1));
+      const target = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
       if(target) target.classList.add('active');
-      activeTab = tab.dataset.tab;
+      activeTab = tabName;
+      // Обновляем hash для SPA-роутинга
+      _spaRouting = true;
+      window.location.hash = tabName === 'chats' ? '' : tabName;
     });
   });
   
@@ -591,6 +596,11 @@ function renderSettingsTab() {
 function openProfile(user) {
   const u = getCurrentUser();
   if(!u) return;
+  // Хэш-роутинг для SPA
+  if(user && user.id) {
+    _spaRouting = true;
+    window.location.hash = '#/profile/' + user.id;
+  }
   
   const isSelf = user.id === u.id;
   const myGifts = getUserGifts(user.id);
@@ -672,6 +682,76 @@ function openProfile(user) {
       document.getElementById('tabChats')?.classList.add('active');
     });
   }
+}
+
+let _spaRouting = false;
+
+// ======================== SPA РОУТИНГ ========================
+function initSPARouting() {
+  // При загрузке — восстанавливаем состояние из hash
+  if(window.location.hash) {
+    navigateToHash(window.location.hash);
+  }
+  // Слушаем изменения hash
+  window.addEventListener('hashchange', () => {
+    if(_spaRouting) { _spaRouting = false; return; }
+    navigateToHash(window.location.hash);
+  });
+}
+
+function navigateToHash(hash) {
+  const u = getCurrentUser();
+  if(!u) return;
+  
+  // Убираем # в начале
+  const path = hash.replace(/^#/, '');
+  
+  // Разбираем путь
+  const parts = path.split('/').filter(Boolean);
+  if(parts.length === 0) {
+    // Просто #/ — показываем чаты
+    showTab('chats');
+    return;
+  }
+  
+  switch(parts[0]) {
+    case 'balance':
+      showTab('balance');
+      break;
+    case 'gifts':
+      showTab('gifts');
+      break;
+    case 'settings':
+      showTab('settings');
+      break;
+    case 'profile':
+      if(parts[1]) openProfile(getUser(parseInt(parts[1])));
+      break;
+    case 'chat':
+      if(parts[1]) openChat(parseInt(parts[1]));
+      break;
+    case 'dm':
+      if(parts[1]) startDm(parseInt(parts[1]));
+      break;
+    default:
+      showTab('chats');
+  }
+}
+
+function showTab(tabName) {
+  const tabs = $$('.tab');
+  const contents = $$('.tab-content');
+  if(!tabs.length) return;
+  
+  tabs.forEach(t => t.classList.remove('active'));
+  const targetTab = document.querySelector(`.tab[data-tab="${tabName}"]`);
+  if(targetTab) targetTab.classList.add('active');
+  
+  contents.forEach(tc => tc.classList.remove('active'));
+  const targetContent = document.getElementById('tab' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+  if(targetContent) targetContent.classList.add('active');
+  
+  activeTab = tabName;
 }
 
 // ======================== ХЕЛПЕРЫ ========================

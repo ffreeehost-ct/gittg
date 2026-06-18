@@ -1,6 +1,17 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
+<script>
+  // GitHub Pages SPA fix: восстанавливаем путь после 404 перенаправления
+  (function(){
+    var redirect = sessionStorage.getItem('redirect');
+    if(redirect && !window.location.hash) {
+      sessionStorage.removeItem('redirect');
+      // Сохраняем путь в hash, чтобы SPA могла его обработать
+      window.location.hash = redirect;
+    }
+  })();
+</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>GitTG</title>

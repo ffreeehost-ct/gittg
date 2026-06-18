@@ -48,6 +48,8 @@ function formatTime(ts) {
 export function openChat(chatId) {
   const user = getCurrentUser();
   if(!user) return;
+  _spaRouting = true;
+  window.location.hash = '#/chat/' + chatId;
   showPage('chatPage');
   const chat = getChat(chatId);
   if(!chat) return;
