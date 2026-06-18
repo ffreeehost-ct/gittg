@@ -37,6 +37,8 @@ export const DB = {
 
 export function getUser(id) { return DB.users.find(u=>u.id===id) }
 export function getUserByUsername(uname) { return DB.users.find(u=>u.username===uname.replace('@','')) }
+export function getUserByEmail(email) { return DB.users.find(u=>u.email===email) }
+export function getUserByPhone(phone) { return DB.users.find(u=>u.phone===phone) }
 export function getChat(id) { return DB.chats.find(c=>c.id===id) }
 export function getChatTitle(chat, userId) {
   if(chat.type==='dm') {
